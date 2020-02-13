@@ -20,7 +20,7 @@ export const MiniPlayerContainer=styled.div`
  width: 100%;
  height: 60px;
  background: ${style ["highlight-background-color"]};
- /* &.mini-enter {
+ &.mini-enter {
     transform: translate3d (0, 100%, 0);
   }
   &.mini-enter-active {
@@ -30,7 +30,7 @@ export const MiniPlayerContainer=styled.div`
   &.mini-exit-active {
     transform: translate3d (0, 100%, 0);
     transition: all .4s
-  } */
+  }
 
   .icon {
     flex: 0 0 40px;
