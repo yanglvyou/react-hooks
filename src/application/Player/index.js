@@ -13,9 +13,26 @@ import MiniPlayer from "./minPlayer/index";
 import NormalPlayer from "./normalPlayer/index";
 
 function Player(props) {
-  const { fullScreen } = props;
-  const { toggleFullScreenDispatch } = props;
-  
+  const {
+    fullScreen,
+    playing,
+    currentIndex,
+    currentSong: immutableCurrentSong
+  } = props;
+  const {
+    toggleFullScreenDispatch,
+    togglePlayingDispatch,
+    changeCurrentIndexDispatch,
+    changeCurrentDispatch
+  } = props;
+
+  //目前播放时间
+  const [currentTime, setCurrentTime] = useState(0);
+  //歌曲总时长
+  const [duration, setDuration] = useState(0);
+  //歌曲播放进度
+  const percent = isNaN(currentTime / duration) ? 0 : currentTime / duration;
+
   const currentSong = {
     al: {
       picUrl:
@@ -24,16 +41,28 @@ function Player(props) {
     name: "木偶人",
     ar: [{ name: "薛之谦" }]
   };
+
+//   let currentSong = immutableCurrentSong.toJS();
+
+  const clickPlaying = (e, state) => {
+    e.stopPropagation();
+    togglePlayingDispatch(state);
+  };
+
   return (
     <div>
       <MiniPlayer
         song={currentSong}
         fullScreen={fullScreen}
+        playing={playing}
+        clickPlaying={clickPlaying}
         toggleFullScreen={toggleFullScreenDispatch}
       ></MiniPlayer>
       <NormalPlayer
         song={currentSong}
         fullScreen={fullScreen}
+        playing={playing}
+        clickPlaying={clickPlaying}
         toggleFullScreen={toggleFullScreenDispatch}
       ></NormalPlayer>
     </div>

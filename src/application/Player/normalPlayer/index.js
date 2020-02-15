@@ -1,18 +1,22 @@
-import React, { useRef } from "react";
+import React, { useRef,useEffect,useState } from "react";
 import { CSSTransition } from "react-transition-group";
 import animations from "create-keyframe-animation";
-import { getName,prefixStyle } from "../../../api/utils";
+import { getName, prefixStyle } from "../../../api/utils";
 import {
   NormalPlayerContainer,
   Top,
   Middle,
   Bottom,
   Operators,
-  CDWrapper
+  CDWrapper,
+  ProgressWrapper
 } from "./style";
+import ProgressBar from "../../../baseUI/progress-bar/index";
 
 function NormalPlayer(props) {
   const { song, fullScreen, toggleFullScreen } = props;
+
+
   const normalPlayerRef = useRef();
   const cdWrapperRef = useRef();
   const transform = prefixStyle("transform");
@@ -23,13 +27,13 @@ function NormalPlayer(props) {
     const { x, y, scale } = _getPosAndScale(); // 获取 miniPlayer 图片中心相对 normalPlayer 唱片中心的偏移
     let animation = {
       0: {
-        transform:`translate3d(${x}px,${y}px,0) scale(${scale})`
+        transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
       },
       60: {
-        transform:`translate3d(0,0,0) scale(1.1)`
+        transform: `translate3d(0,0,0) scale(1.1)`
       },
       100: {
-        transform:`translate3d(0,0,0) scale(1)`
+        transform: `translate3d(0,0,0) scale(1)`
       }
     };
     animations.registerAnimation({
@@ -71,17 +75,19 @@ function NormalPlayer(props) {
   const leave = () => {
     if (!cdWrapperRef.current) return;
     const cdWrapperDom = cdWrapperRef.current;
-    cdWrapperDom.style.transition ="all 0.4s";
-    const { x, y, scale } = _getPosAndScale ();
-    cdWrapperDom.style[transform] =`translate3d(${x}px,${y}px, 0) scale(${scale})`;
+    cdWrapperDom.style.transition = "all 0.4s";
+    const { x, y, scale } = _getPosAndScale();
+    cdWrapperDom.style[
+      transform
+    ] = `translate3d(${x}px,${y}px, 0) scale(${scale})`;
   };
-  
+
   const afterLeave = () => {
     if (!cdWrapperRef.current) return;
     const cdWrapperDom = cdWrapperRef.current;
     cdWrapperDom.style.transition = "";
     cdWrapperDom.style[transform] = "";
-    // 一定要注意现在要把 normalPlayer 这个 DOM 给隐藏掉，因为 CSSTransition 的工作只是把动画执行一遍 
+    // 一定要注意现在要把 normalPlayer 这个 DOM 给隐藏掉，因为 CSSTransition 的工作只是把动画执行一遍
     // 不置为 none 现在全屏播放器页面还是存在
     normalPlayerRef.current.style.display = "none";
   };
@@ -108,7 +114,7 @@ function NormalPlayer(props) {
         </div>
         <div className="background layer"></div>
         <Top className="top">
-          <div className="back" onClick={()=>toggleFullScreen(false)}>
+          <div className="back" onClick={() => toggleFullScreen(false)}>
             <i className="iconfont icon-back">&#xe662;</i>
           </div>
           <h1 className="title">{song.name}</h1>
@@ -126,6 +132,13 @@ function NormalPlayer(props) {
           </CDWrapper>
         </Middle>
         <Bottom className="bottom">
+          <ProgressWrapper>
+            <span className="time time-l">0:00</span>
+            <div className="progress-bar-wrapper">
+              <ProgressBar percent={0.2}></ProgressBar>
+            </div>
+            <div className="time time-r">4:17</div>
+          </ProgressWrapper>
           <Operators>
             <div className="icon i-left">
               <i className="iconfont">&#xe625;</i>
