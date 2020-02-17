@@ -42,48 +42,76 @@ function ProgressBar(props) {
   const progressBar = useRef();
   const progressBtn = useRef();
   const progressBtnWidth = 16;
- 
+
+  const transform = prefixStyle("transform");
+  const { percent } = props;
+
+  const { percentChange } = props;
+
+  //监听percent
+  useEffect(() => {
+    if (percent >= 0 && percent <= 1 && !touch.initiated) {
+      const barWidth = progressBar.current.clientWidth - progressBtnWidth;
+      const offsetWidth = percent * barWidth;
+      progress.current.style.width = `${offsetWidth}px`;
+      progressBtn.current.style[
+        transform
+      ] = `translate3d(${offsetWidth}px,0,0)`;
+    }
+  }, [percent]);
+
+  const _changePercent = () => {
+    const barWidth = progressBar.current.clientWidth - progressBtnWidth;
+    const curPercent = progress.current.clientWidth / barWidth;
+    percentChange(curPercent);
+  };
+
   //处理进度条的偏移
-  const _offset = (offsetWidth)=>{
-    progress.current.style.width=`${offsetWidth}px`;
-    progressBtn.current.style.transform=`translate3d(${offsetWidth}px,0,0)`;
-  }
+  const _offset = offsetWidth => {
+    progress.current.style.width = `${offsetWidth}px`;
+    progressBtn.current.style.transform = `translate3d(${offsetWidth}px,0,0)`;
+  };
 
-  const progressTouchStart=(e)=>{
-    const startTouch={};
-    startTouch.initiated=true;//initial为true表示滑动动作开始了
-    startTouch.startX=e.touches[0].pageX;//滑动开始横坐标
-    startTouch.left=progress.current.clientWidth;//当前progress长度
-    console.log('startTouch: ', startTouch);
+  const progressTouchStart = e => {
+    const startTouch = {};
+    startTouch.initiated = true; //initial为true表示滑动动作开始了
+    startTouch.startX = e.touches[0].pageX; //滑动开始横坐标
+    startTouch.left = progress.current.clientWidth; //当前progress长度
+    console.log("startTouch: ", startTouch);
     setTouch(startTouch);
-  }
+  };
 
-  const progressTouchMove=(e)=>{
-    if(!touch.initiated) return;
+  const progressTouchMove = e => {
+    if (!touch.initiated) return;
     //滑动距离
-    const deltaX = e.touches[0].pageX-touch.startX;
-    console.log('deltaX: ', deltaX);
-    const barWidth = progressBar.current.clientWidth-progressBtnWidth;
-    console.log('progressBar.current.clientWidth: ', progressBar.current.clientWidth);
-    const offsetWidth = Math.min (Math.max (0, touch.left + deltaX), barWidth);
-    console.log('touch.left + deltaX: ',touch.left, touch.left + deltaX);
-    console.log('offsetWidth: ', offsetWidth);
-  _offset (offsetWidth);
-  }
-  const progressTouchEnd=(e)=>{
+    const deltaX = e.touches[0].pageX - touch.startX;
+    console.log("deltaX: ", deltaX);
+    const barWidth = progressBar.current.clientWidth - progressBtnWidth;
+    console.log(
+      "progressBar.current.clientWidth: ",
+      progressBar.current.clientWidth
+    );
+    const offsetWidth = Math.min(Math.max(0, touch.left + deltaX), barWidth);
+    console.log("touch.left + deltaX: ", touch.left, touch.left + deltaX);
+    console.log("offsetWidth: ", offsetWidth);
+    _offset(offsetWidth);
+  };
+  const progressTouchEnd = e => {
     const endTouch = JSON.parse(JSON.stringify(touch));
-    endTouch.initiated=false;
+    endTouch.initiated = false;
     setTouch(endTouch);
-  }
-  const progressClick=(e)=>{
-    console.log('e: ', e);
+    _changePercent();
+  };
+  const progressClick = e => {
+    console.log("e: ", e);
     const rect = progressBar.current.getBoundingClientRect();
-    console.log('rect: ', rect);
-    const offsetWidth=e.pageX-rect.left;
-    console.log('e.pageX: ', e.pageX);
-    console.log('offsetWidth: ', offsetWidth);
-    _offset (offsetWidth);
-  }
+    console.log("rect: ", rect);
+    const offsetWidth = e.pageX - rect.left;
+    console.log("e.pageX: ", e.pageX);
+    console.log("offsetWidth: ", offsetWidth);
+    _offset(offsetWidth);
+    _changePercent();
+  };
 
   return (
     <ProgressBarWrapper>
