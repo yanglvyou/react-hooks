@@ -27,7 +27,8 @@ function Singers(props) {
     enterLoading,
     pullUpLoading,
     pullDownLoading,
-    pageCount
+    pageCount,
+    songsCount
   } = props;
   console.log("enterLoading: ", enterLoading);
 
@@ -118,7 +119,7 @@ function Singers(props) {
           oldVal={alpha}
         ></Horizen>
       </NavContainer>
-      <ListContainer>
+      <ListContainer play={songsCount}>
         <Scroll
           pullUp={handlePullUp}
           pullDown={handlePullDown}
@@ -140,7 +141,8 @@ const mapStateToProps = state => ({
   enterLoading: state.getIn(["singers", "enterLoading"]),
   pullUpLoading: state.getIn(["singers", "pullUpLoading"]),
   pullDownLoading: state.getIn(["singers", "pullDownLoading"]),
-  pageCount: state.getIn(["singers", "pageCount"])
+  pageCount: state.getIn(["singers", "pageCount"]),
+  songsCount: state.getIn(["player", "playList"]).size,
 });
 const mapDispatchToProps = dispatch => {
   return {

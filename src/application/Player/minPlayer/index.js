@@ -9,11 +9,10 @@ function MiniPlayer(props) {
     fullScreen,
     toggleFullScreen,
     playing,
-    // percent,
+    percent,
     clickPlaying
   } = props;
   const miniPlayerRef = useRef();
-  let percent = 0.2;
   return (
     <CSSTransition
       in={!fullScreen}

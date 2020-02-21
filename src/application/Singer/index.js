@@ -14,18 +14,23 @@ import Header from "../../baseUI/header/index";
 import SongsList from "../SongList/index";
 import Scroll from "./../../baseUI/scroll/index";
 import { getSingerInfo, changeEnterLoading } from "./store/actionCreators";
+import MusicNote from '../../baseUI/music-note/index';
 
 function Singer(props) {
   const [showStatus, setShowStatus] = useState(true);
+  const musicNoteRef = useRef();
+  const musicAnimation =(x,y)=>{
+    musicNoteRef.current.startAnimation({x,y});
+  }
   const {
     artist:immutableArtist,
     songs:immutableSongs,
     loading,
-    getSingerDataDispatch
+    getSingerDataDispatch,
+    songsCount
   } = props;
   const artist = immutableArtist.toJS();
   const songs = immutableSongs.toJS();
-  console.log(loading,33333333333);
   const collectButton = useRef();
   const imageWrapper = useRef();
   const songScrollWrapper = useRef();
@@ -102,7 +107,7 @@ function Singer(props) {
       unmountOnExit
       onExited={() => props.history.goBack()}
     >
-      <Container>
+      <Container play={songsCount}>
         <Header
           handleClick={setShowStatusFalse}
           title={artist.name}
@@ -118,10 +123,11 @@ function Singer(props) {
         <BgLayer ref={layer}></BgLayer>
         <SongListWrapper ref={songScrollWrapper}>
           <Scroll ref={songScroll} onScroll={handleScroll}>
-            <SongsList songs={songs} showCollect={false}></SongsList>
+            <SongsList songs={songs} showCollect={false} musicAnimation={musicAnimation}></SongsList>
           </Scroll>
         </SongListWrapper>
         { loading ? (<Loading></Loading>) : null}
+        <MusicNote ref={musicNoteRef}></MusicNote>
       </Container>
     </CSSTransition>
   );
@@ -130,7 +136,8 @@ function Singer(props) {
 const mapStateToProps = state => ({
   artist: state.getIn(["singerInfo", "artist"]),
   songs: state.getIn(["singerInfo", "songsOfArtist"]),
-  loading: state.getIn(["singerInfo", "loading"])
+  loading: state.getIn(["singerInfo", "loading"]),
+  songsCount: state.getIn(["player", "playList"]).size,
 });
 
 const mapDispatchToProps = dispatch => {

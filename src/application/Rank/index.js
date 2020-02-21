@@ -2,14 +2,14 @@ import React, { useEffect } from "react";
 import { connect } from "react-redux";
 import { renderRoutes } from "react-router-config";
 import { getRankList } from "./store/index";
-import Loading from '../../baseUI/loading';
+import Loading from "../../baseUI/loading";
 import Scroll from "../../baseUI/scroll/index";
-import { filterIndex, filterIdx } from '../../api/utils';
-import { EnterLoading } from './../Singers/style';
+import { filterIndex, filterIdx } from "../../api/utils";
+import { EnterLoading } from "./../Singers/style";
 import { List, ListItem, SongList, Container } from "./style";
 
 function Rank(props) {
-  const { rankList: list, loading } = props;
+  const { rankList: list, loading, songsCount } = props;
   const { getRankListDataDispatch } = props;
 
   let rankList = list ? list.toJS() : [];
@@ -23,9 +23,9 @@ function Rank(props) {
   let officialList = rankList.slice(0, globalStartIndex);
   let globalList = rankList.slice(globalStartIndex);
 
-  const enterDetail = (detail) => {
-    props.history.push(`/rank/${detail.id}`)
-}
+  const enterDetail = detail => {
+    props.history.push(`/rank/${detail.id}`);
+  };
 
   const renderSongList = list => {
     return list.length ? (
@@ -66,7 +66,7 @@ function Rank(props) {
   let displayStyle = loading ? { display: "none" } : { display: "" };
 
   return (
-    <Container>
+    <Container play={songsCount}>
       <Scroll>
         <div>
           <h1 className="offical" style={displayStyle}>
@@ -77,7 +77,11 @@ function Rank(props) {
             全球榜
           </h1>
           {renderRankList(globalList, true)}
-          { loading ? <EnterLoading><Loading></Loading></EnterLoading> : null }
+          {loading ? (
+            <EnterLoading>
+              <Loading></Loading>
+            </EnterLoading>
+          ) : null}
         </div>
       </Scroll>
       {renderRoutes(props.route.routes)}
@@ -87,7 +91,8 @@ function Rank(props) {
 
 const mapStateToProps = state => ({
   rankList: state.getIn(["rank", "rankList"]),
-  loading: state.getIn(["rank", "loading"])
+  loading: state.getIn(["rank", "loading"]),
+  songsCount: state.getIn(["player", "playList"]).size
 });
 
 const mapDispatchToProps = dispatch => {

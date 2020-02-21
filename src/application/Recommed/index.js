@@ -11,7 +11,7 @@ import { Content } from "./style";
 
 function Recommend(props) {
   console.log('props: ', props);
-  const { bannerList, recommendList, enterLoading } = props;
+  const { bannerList, recommendList, enterLoading ,songsCount} = props;
   const { getBannerDataDispatch, getRecommendListDataDispatch } = props;
 
   useEffect(() => {
@@ -27,8 +27,8 @@ function Recommend(props) {
   const recommendListJS = recommendList ? recommendList.toJS() : [];
 
   return (
-    <Content>
-      <Scroll className="list" onScroll={forceCheck}>
+    <Content play={songsCount}>
+      <Scroll onScroll={forceCheck}>
         <div>
           <Slider bannerList={bannerListJS}></Slider>
           <RecommendList recommendList={recommendListJS}></RecommendList>
@@ -42,7 +42,8 @@ function Recommend(props) {
 const mapStateToProps = state => ({
   bannerList: state.getIn(["recommend", "bannerList"]),
   recommendList: state.getIn(["recommend", "recommendList"]),
-  enterLoading: state.getIn(["recommend", "enterLoading"])
+  enterLoading: state.getIn(["recommend", "enterLoading"]),
+  songsCount: state.getIn(["player", "playList"]).size,
 });
 
 const mapDispatchToProps = dispatch => {

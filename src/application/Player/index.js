@@ -11,7 +11,7 @@ import {
 } from "./store/actionCreators";
 import MiniPlayer from "./minPlayer/index";
 import NormalPlayer from "./normalPlayer/index";
-import { getSongUrl, isEmptyObject,shuffle,findIndex } from "../../api/utils";
+import { getSongUrl, isEmptyObject, shuffle, findIndex } from "../../api/utils";
 import { set } from "immutable";
 import Toast from "../../baseUI/Toast/index";
 import { playMode } from "../../api/config";
@@ -42,8 +42,11 @@ function Player(props) {
 
   //记录当前的歌曲，以便下次重新渲染时对比是否是一首歌
   const [preSong, setPreSong] = useState({});
-  const [modeText,setModeText] = useState('');
+  const [modeText, setModeText] = useState("");
   const toastRef = useRef();
+
+  const [songReady, setSongReady] = useState(true);
+  
 
   const changeMode = () => {
     let newMode = (mode + 1) % 3;
@@ -69,25 +72,22 @@ function Player(props) {
     toastRef.current.show();
   };
 
-  //先mock一份currentIndex;
-  useEffect(() => {
-    changeCurrentIndexDispatch(0);
-  }, []);
 
   useEffect(() => {
     if (
       !playList.length ||
       currentIndex === -1 ||
       !playList[currentIndex] ||
-      playList[currentIndex].id === preSong.id
+      playList[currentIndex].id === preSong.id ||
+      !songReady
     )
       return;
     let current = playList[currentIndex];
     changeCurrentDispatch(current); //赋值currentSong
     setPreSong(current);
     audioRef.current.src = getSongUrl(current.id);
-    setTimeout(() => {
-      audioRef.current.play();
+    audioRef.current.play().then(() => {
+      setSongReady(true);
     });
     togglePlayingDispatch(true); //播放状态
     setCurrentTime(0);
@@ -101,16 +101,7 @@ function Player(props) {
   //歌曲播放进度
   const percent = isNaN(currentTime / duration) ? 0 : currentTime / duration;
 
-  const currentSong = {
-    al: {
-      picUrl:
-        "https://p1.music.126.net/JL_id1CFwNJpzgrXwemh4Q==/109951164172892390.jpg"
-    },
-    name: "木偶人",
-    ar: [{ name: "薛之谦" }]
-  };
-
-  //   let currentSong = immutableCurrentSong.toJS();
+  let currentSong = immutableCurrentSong.toJS();
 
   const clickPlaying = (e, state) => {
     e.stopPropagation();
@@ -118,20 +109,6 @@ function Player(props) {
   };
 
   const audioRef = useRef();
-
-  useEffect(() => {
-    if (!currentSong) return;
-    changeCurrentIndexDispatch(0);
-    let current = playList[0];
-    changeCurrentDispatch(current);
-    audioRef.current.src = getSongUrl(current.id);
-    setTimeout(() => {
-      audioRef.current.play();
-    });
-    togglePlayingDispatch(true); //播放状态
-    setCurrentTime(0);
-    setDuration((current.dt / 1000) | 0); //时长
-  }, []);
 
   useEffect(() => {
     playing ? audioRef.current.play() : audioRef.current.pause();
@@ -154,7 +131,7 @@ function Player(props) {
   const handleLoop = () => {
     audioRef.current.currentTime = 0;
     changePlayingState(true);
-    togglePlayingDispatch(true)
+    togglePlayingDispatch(true);
     audioRef.current.play();
   };
 
@@ -162,12 +139,11 @@ function Player(props) {
     //播放例表只有一首歌时单曲循环
     if (playList.length === 1) {
       handleLoop();
-      console.log(playing,'playing');
       return;
     }
     let index = currentIndex - 1;
     if (index < 0) index = playList.length - 1;
-    
+
     if (!playing) togglePlayingDispatch(true);
     changeCurrentIndexDispatch(index);
   };
@@ -184,15 +160,16 @@ function Player(props) {
     changeCurrentIndexDispatch(index);
   };
 
-  const handleEnd = ()=>{
-    if(mode === playMode.loop){
+  const handleEnd = () => {
+    if (mode === playMode.loop) {
       handleLoop();
-    }else{
+    } else {
       handleNext();
     }
+  };
+  const handleError=()=>{
+    alert ("播放出错");
   }
-
-  
 
   return (
     <div>
@@ -201,6 +178,7 @@ function Player(props) {
           song={currentSong}
           fullScreen={fullScreen}
           playing={playing}
+          percent={percent}
           toggleFullScreen={toggleFullScreenDispatch}
           clickPlaying={clickPlaying}
         />
@@ -222,7 +200,12 @@ function Player(props) {
           changeMode={changeMode}
         />
       )}
-      <audio ref={audioRef} onTimeUpdate={updateTime} onEnded={handleEnd} ></audio>
+      <audio
+        ref={audioRef}
+        onTimeUpdate={updateTime}
+        onEnded={handleEnd}
+        onError={handleError}
+      ></audio>
       <Toast text={modeText} ref={toastRef}></Toast>
     </div>
   );
