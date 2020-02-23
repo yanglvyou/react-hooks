@@ -1,6 +1,32 @@
 import * as actionTypes from "./constants";
 import { fromJS } from "immutable";
 import { playMode } from "../../../api/config";
+import { findIndex } from "../../../api/utils";
+
+const handleDeleteSong = (state, song) => {
+  //深拷贝
+  const playList = JSON.parse(JSON.stringify(state.get("playList").toJS()));
+  const sequenceList = JSON.parse(
+    JSON.stringify(state.get("sequencePlayList").toJS())
+  );
+  let currentIndex = state.get('currentIndex');
+  const fpIndex=findIndex(song,playList);
+  playList.splice(fpIndex,1);
+  //如果删除的歌曲排在当前播放歌曲前面，currentIndex--,让歌曲正常播放
+  if(fpIndex<currentIndex) currentIndex--;
+
+  //sequenceList中直接删除
+  const fsIndex = findIndex(song,sequenceList);
+  sequenceList.splice(fsIndex,1);
+
+  return state.merge({
+    'playList':fromJS(playList),
+    'sequencePlayList':fromJS(sequenceList),
+    'currentIndex':fromJS(currentIndex),
+  })
+
+
+};
 
 const defaultState = fromJS({
   fullScreen: false, // 播放器是否为全屏模式
@@ -31,6 +57,8 @@ export default (state = defaultState, action) => {
       return state.set("currentIndex", action.data);
     case actionTypes.SET_SHOW_PLAYLIST:
       return state.set("showPlayList", action.data);
+    case actionTypes.DELETE_SONG:
+      return handleDeleteSong(state,action.data)
     default:
       return state;
   }

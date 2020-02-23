@@ -2,15 +2,25 @@ import React, { useRef, useState, useCallback } from "react";
 import { connect } from "react-redux";
 import { CSSTransition } from "react-transition-group";
 import { prefixStyle, getName, shuffle, findIndex } from "../../../api/utils";
-import { PlayListWrapper, ScrollWrapper, ListHeader,ListContent } from "./style";
 import {
+  PlayListWrapper,
+  ScrollWrapper,
+  ListHeader,
+  ListContent
+} from "./style";
+import {
+  changeSequecePlayList,
+  changeCurrentSong,
+  changePlayingState,
   changeShowPlayList,
   changeCurrentIndex,
   changePlayMode,
-  changePlayList
+  changePlayList,
+  deleteSong
 } from "../store/actionCreators";
 import { playMode } from "../../../api/config";
 import Scroll from "../../../baseUI/scroll";
+import Confirm from "../../../baseUI/confirm/index";
 
 function PlayList(props) {
   const {
@@ -26,7 +36,9 @@ function PlayList(props) {
     togglePlayListDispatch,
     changeCurrentIndexDispatch,
     changePlayListDispatch,
-    changeModeDispatch
+    changeModeDispatch,
+    deleteSongDispatch,
+    clearDispatch
   } = props;
   const currentSong = immutableCurrentSong.toJS();
   const playList = immutablePlayList.toJS();
@@ -35,6 +47,7 @@ function PlayList(props) {
   const playListRef = useRef();
   const listWrapperRef = useRef();
   const [isShow, setIsShow] = useState(false);
+  const confirmRef = useRef();
 
   const transform = prefixStyle("transform");
 
@@ -113,8 +126,30 @@ function PlayList(props) {
     const className = current ? "icon-play" : "";
     const content = current ? "&#xe6e3;" : "";
     return (
-        <i className={`current iconfont ${className}`} dangerouslySetInnerHTML={{__html:content}}></i>
-      )
+      <i
+        className={`current iconfont ${className}`}
+        dangerouslySetInnerHTML={{ __html: content }}
+      ></i>
+    );
+  };
+
+  const handleChangeCurrentIndex = index => {
+    if (currentIndex === index) return;
+    changeCurrentIndexDispatch(index);
+  };
+
+  const handleDeleteSong = (e, item) => {
+    e.stopPropagation();
+    deleteSongDispatch(item);
+  };
+
+  //是否删除全部
+  const handleShowClear = () => {
+    confirmRef.current.show();
+  };
+
+  const handleConfirmClear = () => {
+    clearDispatch();
   };
 
   return (
@@ -132,11 +167,20 @@ function PlayList(props) {
         style={isShow === true ? { display: "block" } : { display: "none" }}
         onClick={() => togglePlayListDispatch(false)}
       >
-        <div className="list_wrapper" ref={listWrapperRef}>
+        <div
+          className="list_wrapper"
+          ref={listWrapperRef}
+          onClick={e => e.stopPropagation()}
+        >
           <ListHeader>
             <h1 className="title">
               {getPlayMode()}
-              <span className="iconfont clear">&#xe63d;</span>
+              <span
+                className="iconfont clear"
+                onClick={() => handleShowClear()}
+              >
+                &#xe63d;
+              </span>
             </h1>
           </ListHeader>
           <ScrollWrapper>
@@ -144,7 +188,11 @@ function PlayList(props) {
               <ListContent>
                 {playList.map((item, index) => {
                   return (
-                    <li className="item" key={item.id}>
+                    <li
+                      className="item"
+                      key={item.id}
+                      onClick={() => handleChangeCurrentIndex(index)}
+                    >
                       {getCurrentIcon(item)}
                       <span className="text">
                         {item.name} - {getName(item.ar)}
@@ -152,7 +200,10 @@ function PlayList(props) {
                       <span className="like">
                         <i className="iconfont">&#xe601;</i>
                       </span>
-                      <span className="delete">
+                      <span
+                        className="delete"
+                        onClick={e => handleDeleteSong(e, item)}
+                      >
                         <i className="iconfont">&#xe63d;</i>
                       </span>
                     </li>
@@ -161,6 +212,13 @@ function PlayList(props) {
               </ListContent>
             </Scroll>
           </ScrollWrapper>
+          <Confirm
+            ref={confirmRef}
+            text={"是否删除全部?"}
+            cancelBtnText={"取消"}
+            confirmBtnText={"确定"}
+            handleConfirm={handleConfirmClear}
+          ></Confirm>
         </div>
       </PlayListWrapper>
     </CSSTransition>
@@ -192,6 +250,25 @@ const mapDispatchToProps = dispatch => {
     // 修改当前的歌曲列表
     changePlayListDispatch(data) {
       dispatch(changePlayList(data));
+    },
+    //删除歌曲
+    deleteSongDispatch(data) {
+      dispatch(deleteSong(data));
+    },
+
+    //删除全部
+    clearDispatch() {
+      // 1. 清空两个列表
+      dispatch(changePlayList([]));
+      dispatch(changeSequecePlayList([]));
+      // 2. 初始 currentIndex
+      dispatch(changeCurrentIndex(-1));
+      // 3. 关闭 PlayList 的显示
+      dispatch(changeShowPlayList(false));
+      // 4. 将当前歌曲置空
+      dispatch(changeCurrentSong({}));
+      // 5. 重置播放状态
+      dispatch(changePlayingState(false));
     }
   };
 };
