@@ -44,6 +44,21 @@ function PlayList(props) {
   const playList = immutablePlayList.toJS();
   const sequencePlayList = immutableSequencePlayList.toJS();
 
+  //是否允许滑动事件发生
+  const [canTouch,setCanTouch] = useState(true);
+
+  const listContentRef=useRef();
+
+
+  //touchStart 后记录y值
+  const [startY,setStartY] = useState(0);
+  //touchStart事件是否以及被触发
+  const [initialed,setInitialed]=useState(0);
+  //用户下滑的距离
+  const [distance,setDistance] = useState(0);
+
+ 
+
   const playListRef = useRef();
   const listWrapperRef = useRef();
   const [isShow, setIsShow] = useState(false);
@@ -152,6 +167,42 @@ function PlayList(props) {
     clearDispatch();
   };
 
+  const handleScroll=(pos)=>{
+    //只有当内容偏移量为0的时候才能下滑关闭PlayList 否这一边内容在移动，一边列表在移动
+    let state= pos.y===0;
+    setCanTouch(state);
+}
+
+
+  const handleTouchStart=(e)=>{
+      if(!canTouch||initialed) return;
+      listWrapperRef.current.style['transition']='';
+      setStartY(e.nativeEvent.touches[0].pageY)//记录y值
+      setInitialed(true);
+  }
+  const handleTouchMove=(e)=>{
+      if(!canTouch || !initialed) return;
+      let distance =e.nativeEvent.touches[0].pageY- startY;
+      console.log('distance: ', distance);
+      if(distance<0) return;
+      setDistance(distance)//记录下滑距离
+      listWrapperRef.current.style.transform=`translate3d(0,${distance}px,0)`;
+  }
+  const handleTouchEnd=(e)=>{
+      setInitialed(false);
+      //这里设置阈值 200px
+      if(distance>=300){
+          //大于200px 关闭列表
+          togglePlayListDispatch(false);
+      }else{
+          //否知反弹回去
+          listWrapperRef.current.style['transition']='all 0.4s';
+          listWrapperRef.current.style[transform]=`translate3d(0px,0px,0px)`;
+      }
+  }
+
+
+
   return (
     <CSSTransition
       in={showPlayList}
@@ -171,6 +222,9 @@ function PlayList(props) {
           className="list_wrapper"
           ref={listWrapperRef}
           onClick={e => e.stopPropagation()}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <ListHeader>
             <h1 className="title">
@@ -184,7 +238,7 @@ function PlayList(props) {
             </h1>
           </ListHeader>
           <ScrollWrapper>
-            <Scroll>
+            <Scroll ref={listContentRef} onScroll={props=>handleScroll(props)} bounceTop={false}>
               <ListContent>
                 {playList.map((item, index) => {
                   return (

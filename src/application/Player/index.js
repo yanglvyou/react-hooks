@@ -12,6 +12,7 @@ import {
 import MiniPlayer from "./minPlayer/index";
 import NormalPlayer from "./normalPlayer/index";
 import { getSongUrl, isEmptyObject, shuffle, findIndex } from "../../api/utils";
+import { getLyricRequest } from "../../api/request";
 import { set } from "immutable";
 import Toast from "../../baseUI/Toast/index";
 import { playMode } from "../../api/config";
@@ -45,6 +46,8 @@ function Player(props) {
   const [preSong, setPreSong] = useState({});
   const [modeText, setModeText] = useState("");
   const toastRef = useRef();
+
+  const currentLyric=useRef();
 
   const [songReady, setSongReady] = useState(true);
   
@@ -91,9 +94,26 @@ function Player(props) {
       setSongReady(true);
     });
     togglePlayingDispatch(true); //播放状态
+    getLyric(current.id);
     setCurrentTime(0);
     setDuration((current.dt / 1000) | 0); //时长
   }, [playList, currentIndex]);
+
+
+  const getLyric=id=>{
+    let lyric='';
+    getLyricRequest(id).then(data=>{
+      console.log('data: ', data);
+      lyric=data.lrc.lyric;
+      if(!lyric){
+        currentLyric.current=null;
+        return;
+      }
+    }).catch(()=>{
+      songReady.current=true;
+      audioRef.current.play();
+    })
+  }
 
   //目前播放时间
   const [currentTime, setCurrentTime] = useState(0);
