@@ -14,6 +14,7 @@ import NormalPlayer from "./normalPlayer/index";
 import { getSongUrl, isEmptyObject, shuffle, findIndex } from "../../api/utils";
 import { getLyricRequest } from "../../api/request";
 import { set } from "immutable";
+import Lyric from "../../api/lyric-parser";
 import Toast from "../../baseUI/Toast/index";
 import { playMode } from "../../api/config";
 import PlayList from "./play-list/index";
@@ -50,6 +51,9 @@ function Player(props) {
   const currentLyric=useRef();
 
   const [songReady, setSongReady] = useState(true);
+
+  const [currentPlayingLyric,setPlayingLyric]=useState('');
+  const currentLineNum=useRef(0);
   
 
   const changeMode = () => {
@@ -98,7 +102,12 @@ function Player(props) {
     setCurrentTime(0);
     setDuration((current.dt / 1000) | 0); //时长
   }, [playList, currentIndex]);
-
+ 
+  const handleLyric=({lineNum,txt})=>{
+    if(!currentLyric.current) return;
+    currentLineNum.current=lineNum;
+    setPlayingLyric(txt);
+  }
 
   const getLyric=id=>{
     let lyric='';
@@ -109,6 +118,10 @@ function Player(props) {
         currentLyric.current=null;
         return;
       }
+      currentLyric.current=new Lyric(lyric,handleLyric);
+      currentLyric.current.play ();
+      currentLineNum.current = 0;
+      currentLyric.current.seek (0);
     }).catch(()=>{
       songReady.current=true;
       audioRef.current.play();
@@ -127,6 +140,9 @@ function Player(props) {
   const clickPlaying = (e, state) => {
     e.stopPropagation();
     togglePlayingDispatch(state);
+    if (currentLyric.current) {
+      currentLyric.current.togglePlay (currentTime*1000);
+    }
   };
 
   const audioRef = useRef();
@@ -141,6 +157,9 @@ function Player(props) {
     audioRef.current.currentTime = newTime;
     if (!playing) {
       togglePlayingDispatch(true);
+    }
+    if (currentLyric.current) {
+      currentLyric.current.seek (newTime * 1000);
     }
   };
 
@@ -221,6 +240,9 @@ function Player(props) {
           handleNext={handleNext}
           changeMode={changeMode}
           togglePlayList={togglePlayListDispatch}
+          currentLyric={currentLyric.current}
+          currentPlayingLyric={currentPlayingLyric}
+          currentLineNum={currentLineNum.current}
         />
       )}
       <PlayList></PlayList>
