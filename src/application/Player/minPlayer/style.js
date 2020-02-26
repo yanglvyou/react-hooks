@@ -21,14 +21,14 @@ export const MiniPlayerContainer=styled.div`
  height: 60px;
  background: ${style ["highlight-background-color"]};
  &.mini-enter {
-    transform: translate3d (0, 100%, 0);
+    transform: translate3d(0, 100%, 0);
   }
   &.mini-enter-active {
-    transform: translate3d (0, 0, 0);
+    transform: translate3d(0, 0, 0);
     transition: all 0.4s;
   }
   &.mini-exit-active {
-    transform: translate3d (0, 100%, 0);
+    transform: translate3d(0, 100%, 0);
     transition: all .4s
   }
 
