@@ -7,20 +7,21 @@ import {
   getSuggestList
 } from "./store/actionCreators";
 import SearchBox from "./../../baseUI/search-box/index";
-import { Container } from "./style";
+import { Container,ShortcuWrapper,HotKey } from "./style";
 import Scroll from '../../baseUI/scroll';
 
 function Search(props) {
   const {
     hotList,
     enterLoading,
-    suggestList: immutableSuggestList,
+    suggestList:immutableSuggestList,
     songsCount,
-    songsList: immutableSongsList
+    songsList:immutableSongsList
   } = props;
 
   const suggestList = immutableSuggestList.toJS();
   const songsList = immutableSongsList.toJS();
+  
 
   const {
     getHotKeyWordsDispatch,
@@ -40,11 +41,17 @@ function Search(props) {
 
   useEffect(() => {
     setShow(true);
+    //用了redux缓存
+    if(!hotList.size){
+      getHotKeyWordsDispatch();
+    }
   }, []);
 
   const handleQuery = q => {
-    console.log("q: ", q);
     setQuery(q);
+    if(!q) return;
+    changeEnterLoadingDispatch(true);
+    // getSuggestListDispatch(q);
   };
 
   //当搜索框为空时
@@ -82,6 +89,16 @@ function Search(props) {
           newQuery={query}
           handleQuery={handleQuery}
         ></SearchBox>
+        <ShortcuWrapper show={!query}>
+         <scroll>
+           <div>
+             <HotKey>
+                <h1 className="title">热门搜索</h1>
+                {renderHotKey()}
+             </HotKey>
+           </div>
+         </scroll>
+        </ShortcuWrapper>
       </Container>
     </CSSTransition>
   );

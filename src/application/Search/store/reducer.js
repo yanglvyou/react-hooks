@@ -4,7 +4,7 @@ import { fromJS } from "immutable";
 const defaultState = fromJS({
   hotList: [], //热门关键词列表
   suggestList: [], //列表，包括歌手和歌单
-  songList: [], //歌曲列表
+  songsList: [], //歌曲列表
   enterLoading: false
 });
 
