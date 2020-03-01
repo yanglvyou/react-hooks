@@ -15,7 +15,7 @@ export default (state = defaultState, action) => {
     case actionTypes.SET_SUGGEST_LIST:
       return state.set("suggestList", action.data);
     case actionTypes.SET_RESULT_SONGS_LIST:
-      return state.set("songList", action.data);
+      return state.set("songsList", action.data);
     case actionTypes.SET_ENTER_LOADING:
       return state.set("enterLoading", action.data);
     default:

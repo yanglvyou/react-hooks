@@ -1,27 +1,38 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { connect } from "react-redux";
+import LazyLoad, { forceCheck } from "react-lazyload";
 import { CSSTransition } from "react-transition-group";
 import {
   getHotKeyWords,
   changeEnterLoading,
   getSuggestList
 } from "./store/actionCreators";
+import MusicalNote from "../../baseUI/music-note/index";
+import Loading from "./../../baseUI/loading/index";
+import { getSongDetail } from "./../Player/store/actionCreators";
+import { getName } from "../../api/utils";
 import SearchBox from "./../../baseUI/search-box/index";
-import { Container,ShortcuWrapper,HotKey } from "./style";
-import Scroll from '../../baseUI/scroll';
+import {
+  Container,
+  ShortcuWrapper,
+  HotKey,
+  List,
+  ListItem,
+  SongItem
+} from "./style";
+import Scroll from "../../baseUI/scroll";
 
 function Search(props) {
   const {
     hotList,
     enterLoading,
-    suggestList:immutableSuggestList,
+    suggestList: immutableSuggestList,
     songsCount,
-    songsList:immutableSongsList
+    songsList: immutableSongsList
   } = props;
 
   const suggestList = immutableSuggestList.toJS();
   const songsList = immutableSongsList.toJS();
-  
 
   const {
     getHotKeyWordsDispatch,
@@ -34,6 +45,8 @@ function Search(props) {
   //控制动画
   const [show, setShow] = useState(false);
 
+  const musicNoteRef = useRef();
+
   //由于是传递给子组件的，尽量用callback包裹，以使得在依赖未发生改变，始终给子组件相同的引用；
   const searchBack = useCallback(() => {
     setShow(false);
@@ -42,16 +55,16 @@ function Search(props) {
   useEffect(() => {
     setShow(true);
     //用了redux缓存
-    if(!hotList.size){
+    if (!hotList.size) {
       getHotKeyWordsDispatch();
     }
   }, []);
 
   const handleQuery = q => {
     setQuery(q);
-    if(!q) return;
+    if (!q) return;
     changeEnterLoadingDispatch(true);
-    // getSuggestListDispatch(q);
+    getSuggestListDispatch(q);
   };
 
   //当搜索框为空时
@@ -74,6 +87,111 @@ function Search(props) {
     );
   };
 
+  const renderAlbum = () => {
+    let albums = suggestList.playlists;
+    if (!albums || !albums.length) return;
+    return (
+      <List>
+        <h1 className="title">相关歌单</h1>
+        {albums.map((item, index) => {
+          return (
+            <ListItem
+              key={item.accountId + "" + index}
+              onClick={() => props.history.push(`/album/${item.id}`)}
+            >
+              <div className="img_wrapper">
+                <LazyLoad
+                  placeholder={
+                    <img
+                      width="100%"
+                      height="100%"
+                      src={require("./music.png")}
+                      alt="music"
+                    />
+                  }
+                >
+                  <img
+                    src={item.coverImgUrl}
+                    width="100%"
+                    height="100%"
+                    alt="music"
+                  />
+                </LazyLoad>
+              </div>
+              <span className="name">歌单:{item.name}</span>
+            </ListItem>
+          );
+        })}
+      </List>
+    );
+  };
+
+  const renderSingers = () => {
+    let singers = suggestList.artists;
+    if (!singers || !singers.length) return;
+    return (
+      <List>
+        <h1 className="title">相关歌手</h1>
+        {singers.map((item, index) => {
+          return (
+            <ListItem
+              key={item.accountId + "" + index}
+              onClick={() => props.history.push(`/singers/${item.id}`)}
+            >
+              <div className="img_wrapper">
+                <LazyLoad
+                  placeholder={
+                    <img
+                      width="100%"
+                      height="100%"
+                      src={require("./singer.png")}
+                      alt="singer"
+                    />
+                  }
+                >
+                  <img
+                    src={item.picUrl}
+                    width="100%"
+                    height="100%"
+                    alt="music"
+                  />
+                </LazyLoad>
+              </div>
+              <span className="name">歌手: {item.name}</span>
+            </ListItem>
+          );
+        })}
+      </List>
+    );
+  };
+
+  const renderSongs = () => {
+    return (
+      <SongItem style={{ paddingLeft: "20px" }}>
+        {songsList.map(item => {
+          return (
+            <li key={item.id} onClick={e => selectItem(e, item.id)}>
+              <div className="info">
+                <span>{item.name}</span>
+                <span>
+                  {getName(item.artists)} - {item.album.name}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </SongItem>
+    );
+  };
+
+  const selectItem = (e, id) => {
+    getSongDetailDispatch(id);
+    musicNoteRef.current.startAnimation({
+      x: e.nativeEvent.clientX,
+      y: e.nativeEvent.clientY
+    });
+  };
+
   return (
     <CSSTransition
       in={show}
@@ -83,22 +201,33 @@ function Search(props) {
       unmountOnExit
       onExited={() => props.history.goBack()}
     >
-      <Container>
+      <Container play={songsCount}>
         <SearchBox
           back={searchBack}
           newQuery={query}
           handleQuery={handleQuery}
         ></SearchBox>
         <ShortcuWrapper show={!query}>
-         <scroll>
-           <div>
-             <HotKey>
+          <Scroll>
+            <div>
+              <HotKey>
                 <h1 className="title">热门搜索</h1>
                 {renderHotKey()}
-             </HotKey>
-           </div>
-         </scroll>
+              </HotKey>
+            </div>
+          </Scroll>
         </ShortcuWrapper>
+        <ShortcuWrapper show={query}>
+          <Scroll onScorll={forceCheck}>
+            <div>
+              {renderSingers()}
+              {renderAlbum()}
+              {renderSongs()}
+            </div>
+          </Scroll>
+        </ShortcuWrapper>
+        {enterLoading ? <Loading></Loading> : null}
+        <MusicalNote ref={musicNoteRef}></MusicalNote>
       </Container>
     </CSSTransition>
   );
@@ -125,6 +254,9 @@ const mapDispatchToProps = dispatch => {
     },
     getSuggestListDispatch(data) {
       dispatch(getSuggestList(data));
+    },
+    getSongDetailDispatch(id) {
+      dispatch(getSongDetail(id));
     }
   };
 };

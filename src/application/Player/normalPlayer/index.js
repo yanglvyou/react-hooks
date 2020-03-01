@@ -39,7 +39,6 @@ function NormalPlayer(props) {
   } = props;
 
   const { currentLineNum, currentPlayingLyric, currentLyric } = props;
-  console.log('currentLineNum: ', currentLineNum);
 
   const normalPlayerRef = useRef();
   const cdWrapperRef = useRef();

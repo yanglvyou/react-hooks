@@ -25,7 +25,6 @@ export default class Lyric {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];//如"[00:01.997]作词: 薛之谦"
       let result = timeExp.exec(line);
-      console.log('result: ', result);
       if (!result) continue;
       const txt = line.replace(timeExp, '').trim();//现在把时间戳去掉，只剩下歌词文本
       if (txt) {
