@@ -8,15 +8,20 @@ export default class Lyric {
    * @params {string} lrc
    * @params {function} handler
   */
-  constructor(lrc, hanlder = () => { }) {
+  constructor(lrc, hanlder = () => { },speed) {
     this.lrc = lrc;
     this.lines = [];//这是解析后的数组，每一项包含对应的歌词和时间
     this.handler = hanlder;//回调函数
     this.state = STATE_PAUSE;//播放状态
     this.curLineIndex = 0;//当前播放歌词所在的行数
     this.startStamp = 0;//歌曲开始的时间戳
+    this.speed = speed || 1;
 
     this._initLines();
+  }
+
+  changeSpeed(speed){
+    this.speed=speed;
   }
 
   _initLines() {
@@ -112,6 +117,6 @@ export default class Lyric {
       if (this.curLineIndex < this.lines.length && this.state === STATE_PLAYING) {
         this._playRest();
       }
-    }, delay)
+    }, delay/ this.speed)
   }
 }

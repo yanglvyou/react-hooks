@@ -7,16 +7,17 @@ import {
   changeCurrentSong,
   changePlayList,
   changePlayMode,
-  changeFullScreen
+  changeFullScreen,
+  changeSpeed
 } from "./store/actionCreators";
 import MiniPlayer from "./minPlayer/index";
 import NormalPlayer from "./normalPlayer/index";
 import { getSongUrl, isEmptyObject, shuffle, findIndex } from "../../api/utils";
 import { getLyricRequest } from "../../api/request";
-import { set } from "immutable";
+// import { set } from "immutable";
 import Lyric from "../../api/lyric-parser";
 import Toast from "../../baseUI/Toast/index";
-import { playMode } from "../../api/config";
+import { playMode,list } from "../../api/config";
 import PlayList from "./play-list/index";
 
 function Player(props) {
@@ -27,7 +28,8 @@ function Player(props) {
     currentSong: immutableCurrentSong,
     playList: immutablePlayList,
     mode, //播放模式
-    sequencePlayList: immutableSequencePlayList //顺序列表
+    sequencePlayList: immutableSequencePlayList, //顺序列表,
+    speed,
   } = props;
   const {
     toggleFullScreenDispatch,
@@ -36,7 +38,8 @@ function Player(props) {
     changeCurrentDispatch,
     togglePlayListDispatch,
     changeModeDispatch,
-    changePlayListDispatch
+    changePlayListDispatch,
+    changeSpeedDispatch
   } = props;
 
   const playList = immutablePlayList.toJS();
@@ -96,12 +99,23 @@ function Player(props) {
     audioRef.current.src = getSongUrl(current.id);
     audioRef.current.play().then(() => {
       setSongReady(true);
+      //这里加上对播放速度的控制
+      audioRef.current.playbackRate =speed;
     });
     togglePlayingDispatch(true); //播放状态
     getLyric(current.id);
     setCurrentTime(0);
     setDuration((current.dt / 1000) | 0); //时长
   }, [playList, currentIndex]);
+
+  const clickSpeed=(newSpeed)=>{
+    changeSpeedDispatch(newSpeed);
+    //playbackRate为歌词播放速度，可修改
+    audioRef.current.playbackRate=newSpeed;
+    //同步歌词
+    currentLyric.current.changeSpeed(newSpeed);
+    currentLyric.current.seek(currentTime*1000);
+  }
  
   const handleLyric=({lineNum,txt})=>{
     if(!currentLyric.current) return;
@@ -158,7 +172,7 @@ function Player(props) {
       togglePlayingDispatch(true);
     }
     if (currentLyric.current) {
-      currentLyric.current.seek (newTime * 1000);
+      currentLyric.current.seek(newTime * 1000);
     }
   };
 
@@ -242,6 +256,8 @@ function Player(props) {
           currentLyric={currentLyric.current}
           currentPlayingLyric={currentPlayingLyric}
           currentLineNum={currentLineNum.current}
+          speed={speed}
+          clickSpeed={clickSpeed}
         />
       )}
       <PlayList></PlayList>
@@ -265,7 +281,9 @@ const mapStateToProps = state => ({
   mode: state.getIn(["player", "mode"]),
   currentIndex: state.getIn(["player", "currentIndex"]),
   playList: state.getIn(["player", "playList"]),
-  sequencePlayList: state.getIn(["player", "sequencePlayList"])
+  sequencePlayList: state.getIn(["player", "sequencePlayList"]),
+  speed:state.getIn(['player','speed']),
+  
 });
 
 // 映射 dispatch 到 props 上
@@ -291,6 +309,9 @@ const mapDispatchToProps = dispatch => {
     },
     changePlayListDispatch(data) {
       dispatch(changePlayList(data));
+    },
+    changeSpeedDispatch(data){
+      dispatch(changeSpeed(data))
     }
   };
 };

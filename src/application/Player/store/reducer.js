@@ -17,7 +17,7 @@ const handleInsertSong = (state, song) => {
   //如果是当前歌曲直接不处理
   if (fpIndex === currentIndex && currentIndex !== -1) return state;
   currentIndex++;
-  console.log('currentIndex: ', currentIndex);
+  console.log("currentIndex: ", currentIndex);
   //把歌曲放进去，放到当前歌曲的下一个位置
   playList.splice(currentIndex, 0, song);
   //如果列表已经存在要添加的歌曲
@@ -32,9 +32,9 @@ const handleInsertSong = (state, song) => {
 
   //同理，处理sequenceList
   let sequenceIndex = findIndex(playList[currentIndex], sequenceList) + 1;
-  console.log('sequenceIndex: ', sequenceIndex);
+  console.log("sequenceIndex: ", sequenceIndex);
   let fsIndex = findIndex(song, sequenceList);
-  console.log('fsIndex: ', fsIndex);
+  console.log("fsIndex: ", fsIndex);
   //插入歌曲
   sequenceList.splice(sequenceIndex, 0, song);
   // 插入歌曲
@@ -85,7 +85,8 @@ const defaultState = fromJS({
   mode: playMode.sequence, // 播放模式
   currentIndex: -1, // 当前歌曲在播放列表的索引位置
   showPlayList: false, // 是否展示播放列表
-  currentSong: {}
+  currentSong: {},
+  speed: 1
 });
 
 export default (state = defaultState, action) => {
@@ -110,6 +111,8 @@ export default (state = defaultState, action) => {
       return handleDeleteSong(state, action.data);
     case actionTypes.INSERT_SONG:
       return handleInsertSong(state, action.data);
+    case actionTypes.CHANGE_SPEED:
+      return state.set("speed", action.data);
     default:
       return state;
   }

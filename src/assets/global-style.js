@@ -9,6 +9,16 @@ const extendClick = () => {
      };
     `;
 };
+
+const bgFull=()=>{
+  return`
+    background-position:50%;
+    background-size:contain;
+    background-repeat:no-repeat;
+  `
+}
+
+
 //文本溢出
 const noWrap = () => {
   return `
@@ -34,5 +44,7 @@ export default {
   "background-color-shadow": "rgba(0, 0, 0, 0.3)",
   "highlight-background-color": "#fff",
   extendClick,
-  noWrap
+  noWrap,
+  "border-color-v2": "rgba(228, 228, 228, 0.1)",
+  bgFull
 };

@@ -8,7 +8,8 @@ import {
   SET_CURRENT_INDEX,
   SET_SHOW_PLAYLIST,
   DELETE_SONG,
-  INSERT_SONG
+  INSERT_SONG,
+  CHANGE_SPEED
 } from "./constants";
 import {getSongDetailRequest} from '../../../api/request';
 import { fromJS } from "immutable";
@@ -62,6 +63,11 @@ export const intertSong=(data)=>({
   type:INSERT_SONG,
   data
 })
+
+export const changeSpeed = (data) => ({
+  type: CHANGE_SPEED,
+  data
+});
 
 export const getSongDetail=(id)=>{
   return (dispatch)=>{
